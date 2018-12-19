@@ -1,0 +1,58 @@
+Workflows
+  Single source
+  Multi source
+  Local
+  Remote
+  Retry/Pipe
+  No test
+  stdout vs file
+  stderr vs file
+  discovery
+    find directories but don't execute
+  validation
+    verify common errors
+      permissions
+      volume capacity
+
+Optional
+  pause
+
+Development BS
+  compiled output
+  unit tests ...
+  etc
+  disparate discover/write
+
+
+Progress modes
+  count
+    completed / discovered
+    success / error
+  active copies
+    list active transfers
+  copied data
+  throughput
+  expected completion
+
+Input modes
+  Parent directory
+  File with directory list
+
+Output modes
+  stderr / file
+  stdout / file
+
+Execution modes
+  Local
+  Remote
+
+Flags
+  Validation
+  NoTest/Force
+
+
+External Repair/Validation Tool
+  pipe err output to Tool
+
+
+fast-copy <args> 2> fast-repair
