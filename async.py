@@ -9,13 +9,9 @@ from pathlib import PurePath
 from collections import namedtuple
 import multiprocessing
 import fileinput
-import atexit
 
 # Data objects
 DirectoryResult = namedtuple('DirectoryResult','source target status')
-
-# def save_progress():
-#     print('saving results')
 
 process_results = list()
 input_file = 'found_dirs.csv'
@@ -52,18 +48,13 @@ async def copy_dir(root_dir, from_dir, to_dir):
     
     # updates the path to trim the parent dir
     from_path = from_dir.replace(root_dir, f'{root_dir}/.')
-    to_parent = from_dir.replace(root_dir, to_dir)
-    copy_cmd = f"mkdir -p {to_parent}; rsync -aqudzR --ignore-existing {from_path}/* {to_dir}"
-    # await asyncio.sleep(1)
-    # print(copy_cmd)
+    copy_cmd = f"rsync -aqudzR --exclude '/' --ignore-existing {from_path}/ {to_dir}/"
     process = await asyncio.create_subprocess_shell(copy_cmd)
-    await process.wait()
-    stdout, stderr = await process.communicate()
 
     return {
         'returncode': process.returncode,
-        'stdout': stdout.decode(),
-        'stderr': stderr.decode()
+        'stdout': process.stdout.decode(),
+        'stderr': process.stderr.decode()
     }
 
 def get_immediate_subdirectories(path):
@@ -86,22 +77,22 @@ def group_levels(path):
 
 # update to use results as first class
 async def process_dir(copy_root, copy_from, copy_to):
-    process_result = ''
-    try:
-        copy_result = await copy_dir(copy_root, copy_from, copy_to)
-        process_result = 'completed'
-    except:
-        process_result = 'errored'
+    # process_result = ''
+    copy_result = await copy_dir(copy_root, copy_from, copy_to)
+    print(copy_result)
+    process_result = 'completed' if copy_result['returncode'] == 0 else 'errored'
 
     return {
         'source': copy_from,
         'status': process_result
     }
 
-async def process_dir_level(root_dir, dirs, level, copy_to, queue):
+async def process_dir_level(root_dir, dirs, level, copy_to):
     print(f'dir count: [{len(dirs)}] depth: [{level}]')
-    
-    tasks = [queue.put((root_dir, from_dir, copy_to)) for from_dir in dirs]
+
+    # from_dir = dirs.pop()
+    # await queue.put((root_dir, from_dir, copy_to))
+    tasks = [asyncio.ensure_future(process_dir(root_dir, from_dir, copy_to)) for from_dir in dirs]
     await asyncio.gather(*tasks)
 
 # load dirs as csv into file
@@ -148,22 +139,23 @@ async def process_transfer(args):
     depth = args.recursion_depth
     # input_file = args.source_input
     # use a worker per core and queue up directories based on job count parameter
-    queue = asyncio.Queue(maxsize=200)
+    # queue = asyncio.Queue(maxsize=200)
     dirs = await discover_paths(copy_from, copy_to, depth)
-    cpu_count = multiprocessing.cpu_count()
+    # cpu_count = multiprocessing.cpu_count()
 
     # order paths deepest first
     dirs_by_level = groupby(sorted(dirs,key=group_levels, reverse=False), group_levels)
-    tasks = [asyncio.create_task(worker(f'worker-{i}', queue)) for i in range(cpu_count)]
-    [await process_dir_level(copy_from, list(dir_group), level, copy_to, queue) for level, dir_group in dirs_by_level]
+    # tasks = [asyncio.ensure_future(worker(f'worker-{i}', queue)) for i in range(cpu_count)]
+    tasks = [process_dir_level(copy_from, list(dir_group), level, copy_to) for level, dir_group in dirs_by_level]
 
-    await queue.join()
-    [task.cancel() for task in tasks]
+    # await queue.join()
+    # [task.cancel() for task in tasks]
     await asyncio.gather(*tasks, return_exceptions=True)
 
 if __name__ == "__main__":
-    loop = asyncio.new_event_loop()
     args = process_args()
+    loop = asyncio.new_event_loop()
+
     # start = time.clock()
     open(input_file, 'a').close()
     # atexit.register(save_progress)
