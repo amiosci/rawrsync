@@ -50,6 +50,9 @@ class TaskPersistence:
         update_count = self.conn().execute("SELECT MAX(ROWID) FROM task_event").fetchone()[0]
         print(f'Total tasks  [{task_count}]\nTotal events [{update_count}]')
 
+    def get_remaining_tasks(self):
+        return [task for task in self.conn().execute(f"SELECT * FROM remaining_tasks")]
+
     def reset_tasks(self):
         pass
         
@@ -107,6 +110,33 @@ class TaskPersistence:
                     ORDER BY e.rowid
                 ) r
             WHERE r.status_change IN ('discovered');
+
+            CREATE VIEW IF NOT EXISTS remaining_tasks
+            AS
+            SELECT
+                r.task_id,
+                r.root_path,
+                r.source_path,
+                r.destination_path,
+                r.change_time,
+                r.status_change
+            FROM
+                (
+                    SELECT
+                        t.rowid as task_id,
+                        t.root_path,
+                        t.source_path,
+                        t.destination_path,
+                        e.change_time,
+                        e.status_change
+                    FROM
+                        tasks t
+                    INNER JOIN task_event e on e.task_id = t.rowid
+                    GROUP BY t.rowid
+                    HAVING MAX(e.rowid)
+                    ORDER BY e.rowid
+                ) r
+            WHERE r.status_change NOT IN ('completed');
 
             CREATE TRIGGER IF NOT EXISTS new_task
             AFTER INSERT

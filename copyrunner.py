@@ -16,7 +16,6 @@ class NullRunner(AbstractRunner):
 class RsyncRunner(AbstractRunner):
     def process_dir(self, copy_root, copy_from, copy_to):
         copy_result = self.__copy_dir_sync(copy_root, copy_from, copy_to)
-        print(copy_result)
         process_result = 'completed' if copy_result['returncode'] == 0 else 'errored'
         return (process_result, copy_result)
 
@@ -28,17 +27,18 @@ class RsyncRunner(AbstractRunner):
         # --dry-run
         # --super
         # --preallocate 
+        # --exclude '/'
         
         # updates the path to trim the parent dir
         from_path = from_dir.replace(root_dir, f'{root_dir}/.')
-        copy_cmd = f"rsync -aqudzR --exclude '/' --ignore-existing {from_path}/ {to_dir}/"
+        copy_cmd = f"rsync -aqudzR -f '- /*/*/' --ignore-existing '{from_path}/' '{to_dir}/'"
 
         process = subprocess.run(
             copy_cmd, 
             shell=True, 
             stdout=subprocess.PIPE, 
             stderr=subprocess.PIPE)
-        print(process)
+
         return {
             'returncode': process.returncode,
             'stdout': str(process.stdout),

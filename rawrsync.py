@@ -11,7 +11,6 @@ def process_args():
     parser.add_argument('-s', '--source', required=True)
     parser.add_argument('-d', '--destination', required=True)
     parser.add_argument('-i', '--source_input', required=False, default='found_dirs.csv')
-    parser.add_argument('-r', '--recursion_depth', required=False, default=4)
 
     default_thread_count = multiprocessing.cpu_count() * 4
     parser.add_argument('-t', '--thread_count', required=False, default=default_thread_count)
@@ -22,4 +21,7 @@ def process_args():
 if __name__ == "__main__":
     with CopyManager(vars(process_args())) as copy_manager:
         results = copy_manager.process_transfer()
+        if results is not None:
+            print(f'Remaining tasks {results}')
+
         print('Completed')
