@@ -43,7 +43,7 @@ class CopyManager:
         dirs = set(get_dirs(self.source)) if self.discover else []
         with TaskPersistence(self.__loop) as store:
             store.add_tasks([(self.source, path, self.destination) for path in dirs])
-            tasks = [asyncio.ensure_future(self.__worker(f'worker-{i}', store), loop=self.__loop) for i in range(self.thread_count)]
+            tasks = [asyncio.ensure_future(self.__worker('worker-{0}'.format(i), store), loop=self.__loop) for i in range(self.thread_count)]
             await asyncio.gather(*tasks, loop=self.__loop)
             
             store.print_stats()
@@ -52,7 +52,7 @@ class CopyManager:
     async def __worker(self, name, store):
         worker_list = 10
         with ThreadPoolExecutor(worker_list) as executor:
-            # print(f'Started worker [{name}]')
+            print('Started worker [{0}]'.format(name))
             task_list = await store.get_unclaimed_tasks(worker_list)
             while len(task_list) > 0:
                 tasks = [asyncio.ensure_future(self.__loop.run_in_executor(executor, self.__construct_task_processor(store, task))) for task in task_list]
@@ -62,9 +62,9 @@ class CopyManager:
     def __construct_task_processor(self, store, task):
         task_id, event_id, root_path, source_path, destination_path, _, _ = task
         def process_task():
-            # print(f'Processing [{task_id}] [{event_id}] {source_path}')
+            print('Processing [{0}] [{1}] {2}'.format(task_id, event_id, source_path))
             status, _ = self.__runner.process_dir(root_path, source_path, destination_path)
             store.update_task([(task_id, status)])
-            # print(f'Processed [{task_id}] [{event_id}] {source_path} with result {status}')
+            print('Processed [{0}] [{1}] {2} with result {3}'.format(task_id, event_id, source_path, status))
         
         return process_task

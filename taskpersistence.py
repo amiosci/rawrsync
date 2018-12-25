@@ -32,7 +32,7 @@ class TaskPersistence:
             c = self.conn()
             task_count = c.executemany("INSERT OR IGNORE INTO tasks(root_path, source_path, destination_path) VALUES (?,?,?)", tasks).rowcount
             c.commit()
-            print(f'Added {task_count} tasks')
+            print('Added {0} tasks'.format(task_count))
         finally:
             self.__thread_lock.release()
 
@@ -48,17 +48,17 @@ class TaskPersistence:
     def print_stats(self):
         task_count = self.conn().execute("SELECT MAX(ROWID) FROM tasks").fetchone()[0]
         update_count = self.conn().execute("SELECT MAX(ROWID) FROM task_event").fetchone()[0]
-        print(f'Total tasks  [{task_count}]\nTotal events [{update_count}]')
+        print('Total tasks  [{0}]\nTotal events [{1}]'.format(task_count, update_count))
 
     def get_remaining_tasks(self):
-        return [task for task in self.conn().execute(f"SELECT * FROM remaining_tasks")]
+        return [task for task in self.conn().execute("SELECT * FROM remaining_tasks")]
 
     def reset_tasks(self):
         pass
         
     # private
     def __get_unclaimed_tasks(self, count=1):
-        task_list = [task for task in self.conn().execute(f"SELECT * FROM unclaimed_task LIMIT {count}")]
+        task_list = [task for task in self.conn().execute("SELECT * FROM unclaimed_task LIMIT {0}".format(count))]
         if len(task_list) == 0:
             return task_list
 

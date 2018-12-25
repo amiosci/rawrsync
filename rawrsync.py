@@ -22,6 +22,6 @@ if __name__ == "__main__":
     with CopyManager(vars(process_args())) as copy_manager:
         results = copy_manager.process_transfer()
         if results is not None:
-            print(f'Remaining tasks {results}')
+            print('Remaining tasks {0}'.format(results))
 
         print('Completed')

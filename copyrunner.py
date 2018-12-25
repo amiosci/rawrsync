@@ -10,7 +10,7 @@ class AbstractRunner(ABC):
 
 class NullRunner(AbstractRunner):
     def process_dir(self, copy_root, copy_from, copy_to):
-        print(f'Copying [{copy_from}] to [{copy_to}]')
+        print('Copying [{0}] to [{1}]'.format(copy_from, copy_to))
         return ('no-op', copy_from,)
 
 class RsyncRunner(AbstractRunner):
@@ -30,8 +30,8 @@ class RsyncRunner(AbstractRunner):
         # --exclude '/'
         
         # updates the path to trim the parent dir
-        from_path = from_dir.replace(root_dir, f'{root_dir}/.')
-        copy_cmd = f"rsync -aqudzR -f '- /*/*/' --ignore-existing '{from_path}/' '{to_dir}/'"
+        from_path = from_dir.replace(root_dir, '{0}/.'.format(root_dir))
+        copy_cmd = "rsync -aqudzR -f '- /*/*/' --ignore-existing '{0}/' '{1}/'".format(from_path, to_dir)
 
         process = subprocess.run(
             copy_cmd, 
