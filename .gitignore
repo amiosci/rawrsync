@@ -1,3 +1,4 @@
 found_dirs.csv
 *.pyc
 task_store.db*
+*.log
