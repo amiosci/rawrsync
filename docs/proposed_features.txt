@@ -23,13 +23,7 @@ Development BS
   etc
   disparate discover/write
 
-
 Progress modes
-  count
-    completed / discovered
-    success / error
-  active copies
-    list active transfers
   copied data
   throughput
   expected completion

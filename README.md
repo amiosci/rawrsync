@@ -9,6 +9,6 @@ This utility was designed to improve rsync performance on non-optimal structures
 python3 rawrsync.py -s 'source_root' -d 'target_root'
 
 ##### TODO
-- [ ] Improve logging
-- [ ] Improve reporting
-- [ ] Add UI options
+- [x] Improve logging
+- [x] Improve reporting
+- [x] Add UI options
